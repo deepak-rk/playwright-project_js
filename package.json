@@ -5,7 +5,7 @@
   "main": "examples.js",
   "scripts": {},
   "keywords": [],
-  "author": "",
+  "author": "Deepak-rk",
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.43.0",

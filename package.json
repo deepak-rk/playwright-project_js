@@ -1,14 +1,16 @@
 {
-  "name": "playwright-project-js",
-  "version": "1.0.0",
-  "description": "",
-  "main": "examples.js",
-  "scripts": {},
-  "keywords": [],
-  "author": "Deepak-rk",
-  "license": "ISC",
-  "devDependencies": {
-    "@playwright/test": "^1.43.0",
-    "@types/node": "^20.12.5"
-  }
+    "type": "commonjs",
+    "name": "playwright-project-js",
+    "version": "1.0.0",
+    "description": "",
+    "main": "examples.js",
+    "scripts": {},
+    "keywords": [],
+    "author": "Deepak-rk",
+    "license": "ISC",
+    "devDependencies": {
+        "@playwright/test": "^1.43.0",
+        "@types/node": "^20.12.5",
+        "ts-node": "^10.9.2"
+    }
 }

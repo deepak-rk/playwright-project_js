@@ -35,21 +35,58 @@ async function waitForHealth(): Promise<void> {
  * state every time - most importantly, so the admin user registered below
  * is genuinely the first user (mobile-hub's real, and only, admin policy).
  * MONGODB_URI must point at a dedicated test database, never dev/prod data.
+ *
+ * Deletes every document but deliberately does NOT drop the database:
+ * dropping it also destroys the indexes, and the already-running backend's
+ * Mongoose connection never rebuilds them. That silently breaks anything
+ * depending on a unique index - e.g. duplicate-email registration would
+ * start returning 201 instead of 409, because the E11000 that mobile-hub
+ * maps to a 409 can't happen without the index.
  */
 async function resetDatabase(): Promise<void> {
   if (!MONGODB_URI.includes('mobilehub_e2e') && !MONGODB_URI.includes('test')) {
     throw new Error(
-      `Refusing to drop database at MONGODB_URI="${MONGODB_URI}" - it doesn't look like a dedicated test database ` +
+      `Refusing to wipe the database at MONGODB_URI="${MONGODB_URI}" - it doesn't look like a dedicated test database ` +
         `(expected the name to contain "mobilehub_e2e" or "test"). Set MONGODB_URI explicitly to avoid wiping real data.`,
     );
   }
   const client = new MongoClient(MONGODB_URI);
   try {
     await client.connect();
-    await client.db().dropDatabase();
+    const collections = await client.db().collections();
+    await Promise.all(collections.map((c) => c.deleteMany({})));
+    await assertUniqueEmailIndex(client);
   } finally {
     await client.close();
   }
+}
+
+/**
+ * Guards against a subtle failure mode that otherwise surfaces as a baffling
+ * assertion error several tests later: if the `users.email` unique index is
+ * missing, mobile-hub silently accepts duplicate registrations (it maps
+ * Mongo's E11000 to a 409, and without the index there's no E11000), so the
+ * duplicate-email test fails with "expected 409, got 201" and nothing points
+ * at the real cause. Mongoose also swallows index-build errors, so a failed
+ * build leaves no trace in the backend logs either.
+ */
+async function assertUniqueEmailIndex(client: MongoClient): Promise<void> {
+  const users = client.db().collection('users');
+  const exists = await users.indexExists('email_1').catch(() => false);
+  if (exists) return;
+
+  // The collection may simply not exist yet on a first-ever run - that's fine,
+  // the backend builds indexes when it next touches the model.
+  const names = (await client.db().listCollections({ name: 'users' }).toArray()).length;
+  if (names === 0) return;
+
+  throw new Error(
+    `The 'users.email' unique index is missing from ${MONGODB_URI}.\n` +
+      `mobile-hub relies on it to reject duplicate registrations with 409 - without it, duplicates are silently accepted.\n` +
+      `This usually means the database was dropped while the backend was running (dropping a DB destroys its indexes, ` +
+      `and Mongoose does not rebuild them, nor report the failure). Fix: restart the mobile-hub backend against a ` +
+      `clean database so Mongoose rebuilds its indexes, then re-run.`,
+  );
 }
 
 async function registerAdminUser(): Promise<void> {

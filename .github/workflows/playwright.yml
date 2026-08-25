@@ -23,6 +23,11 @@ jobs:
       JWT_SECRET: ci_only_not_a_real_secret_replace_me_1234567890
       API_BASE_URL: http://localhost:3000
       UI_BASE_URL: http://localhost:5173
+      # The suite legitimately exceeds the 200/min default in one run.
+      RATE_LIMIT_MAX: '100000'
+      # No device is attached in CI, so the device-stream specs need the
+      # synthetic capture source.
+      STREAM_CAPTURE_SOURCE: synthetic
     steps:
       - name: Checkout mobile-hub-e2e
         uses: actions/checkout@v4

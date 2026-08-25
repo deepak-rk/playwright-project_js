@@ -1,6 +1,6 @@
 # mobile-hub-e2e
 
-End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) — **43 tests**: 24 against the API (auth, devices, hosts, config, builds, execution, including the live WebSocket event stream) and 19 driving the real UI in a browser (app shell, authentication, device locking, execution, live log streaming).
+End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) — **46 tests**: 24 against the API (auth, devices, hosts, config, builds, execution, including the live WebSocket event stream) and 22 driving the real UI in a browser (app shell, authentication, device locking, execution, live log streaming, and the live device view).
 
 ## Prerequisites
 
@@ -13,8 +13,16 @@ This suite does **not** manage mobile-hub's lifecycle — start it yourself firs
 2. mobile-hub's backend, pointed at a **dedicated test database** (never your dev/prod one — `global-setup.ts` wipes it before every run):
    ```bash
    cd path/to/mobile-hub/backend
-   MONGODB_URI=mongodb://localhost:27017/mobilehub_e2e JWT_SECRET=<32+ chars> npm run dev
+   MONGODB_URI=mongodb://localhost:27017/mobilehub_e2e \
+     JWT_SECRET=<32+ chars> \
+     RATE_LIMIT_MAX=100000 \
+     STREAM_CAPTURE_SOURCE=synthetic \
+     npm run dev
    ```
+   `RATE_LIMIT_MAX` is raised because the suite legitimately exceeds the 200/min default in a
+   single run, and `STREAM_CAPTURE_SOURCE=synthetic` makes the device-stream specs work with no
+   real device attached.
+
 3. mobile-hub's frontend, for the UI project:
    ```bash
    cd path/to/mobile-hub/frontend
@@ -64,9 +72,9 @@ This is also why tests run serially (`workers: 1`, `fullyParallel: false`, see `
 
 **API (24)** — `auth`, `hosts`, `devices` (including the sync-while-locked and host-drops-device regression cases mobile-hub itself found and fixed), `config` (admin-only), `builds` (real fetch/checksum against a local fixture artifact server), `execution` (pass/fail/cancel/409-on-locked-device, and the live WS event stream with token auth).
 
-**UI (19)** — nav and routing, theme toggle persistence, a console-error check across every section, sign-up/sign-in/sign-out, stale-token recovery, device grid and detail, lock/release round-trip (including that your own lock reads as "You" and that a non-admin is offered no release on someone else's lock), the role-gating on triggering a run, and live WebSocket log streaming (log lines and the terminal status arriving without a reload, plus the signed-out message).
+**UI (22)** — nav and routing, theme toggle persistence, a console-error check across every section, sign-up/sign-in/sign-out, stale-token recovery, device grid and detail, lock/release round-trip (including that your own lock reads as "You" and that a non-admin is offered no release on someone else's lock), the role-gating on triggering a run, live WebSocket log streaming (log lines and the terminal status arriving without a reload, plus the signed-out message), and the live device view (frames rendering and updating, the viewer detaching on navigate-away, and two viewers sharing a single capture).
 
-⬜ Not yet: `streaming` (unbuilt in mobile-hub), analytics assertions beyond the page rendering, and visual-regression snapshots.
+⬜ Not yet: analytics assertions beyond the page rendering, H264 streaming (unbuilt in mobile-hub), and visual-regression snapshots.
 
 ## License
 

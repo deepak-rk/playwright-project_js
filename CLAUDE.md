@@ -2,7 +2,7 @@
 
 End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) using Playwright. See `README.md` for how to run it; this file is for working on the suite itself.
 
-**Status:** 43 tests passing — 24 API (auth, hosts, devices, config, builds, execution + its WS stream) and 19 UI driving the real frontend in a browser.
+**Status:** 46 tests passing — 24 API (auth, hosts, devices, config, builds, execution + its WS stream) and 22 UI driving the real frontend in a browser.
 
 ## Repo layout
 
@@ -14,7 +14,7 @@ mobile-hub-e2e/
       *.spec.ts          one file per mobile-hub backend module
     ui/
       helpers/ui.ts        seedDevice() via the API, signUpThroughUi()
-      *.spec.ts             shell, auth, devices, execution, streaming
+      *.spec.ts             shell, auth, devices, execution, streaming, device-stream
   global-setup.ts        waits for backend + frontend, wipes the test DB, mints the shared admin user
   playwright.config.ts
   README.md               usage docs (human-facing)
@@ -30,6 +30,7 @@ Only `CLAUDE.md` and `README.md` live at repo root. Anything else documentation-
 - **Tests run serially on purpose.** They share backend state (one admin user, device records keyed by machineId/udid). Use `uniqueDevice()` from `helpers/auth.ts` for any test creating device/host state, so tests can't collide with each other even though they share a database - but don't try to parallelize the suite without first giving every test fully isolated state, not just unique device ids.
 - **Test what mobile-hub actually promises, not implementation details.** These are black-box HTTP/WS/browser tests against the real contract - no reaching into mobile-hub's source, no mocking its internals.
 - **UI specs assert on what a user can see and do**, queried by role/label/text rather than CSS classes, so a restyle doesn't break them but a broken flow does. Their *fixtures* come from the API (`seedDevice`), not by clicking through setup screens - otherwise one broken page fails every unrelated spec.
+- **Assert eventually-consistent server state with `expect.poll`, not a single sample** — viewer counts and run statuses settle asynchronously, and React StrictMode double-invokes effects in dev so sockets briefly overlap. But give the poll a real timeout before relaxing an assertion: a count that stays wrong for 15s is a leak, not flakiness. That distinction is exactly how the stream viewer leak was found rather than papered over.
 - **The `ui` project depends on `api`** (`dependencies: ['api']` in the config), so a backend regression fails in the cheaper, more precise suite first instead of surfacing as a confusing UI failure.
 
 ## Do this, not that

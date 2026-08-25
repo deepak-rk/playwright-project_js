@@ -1,6 +1,6 @@
 # mobile-hub-e2e
 
-End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) — **41 tests**: 24 against the API (auth, devices, hosts, config, builds, execution, including the live WebSocket event stream) and 17 driving the real UI in a browser (app shell, authentication, device locking, execution).
+End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) — **43 tests**: 24 against the API (auth, devices, hosts, config, builds, execution, including the live WebSocket event stream) and 19 driving the real UI in a browser (app shell, authentication, device locking, execution, live log streaming).
 
 ## Prerequisites
 
@@ -64,7 +64,7 @@ This is also why tests run serially (`workers: 1`, `fullyParallel: false`, see `
 
 **API (24)** — `auth`, `hosts`, `devices` (including the sync-while-locked and host-drops-device regression cases mobile-hub itself found and fixed), `config` (admin-only), `builds` (real fetch/checksum against a local fixture artifact server), `execution` (pass/fail/cancel/409-on-locked-device, and the live WS event stream with token auth).
 
-**UI (17)** — nav and routing, theme toggle persistence, a console-error check across every section, sign-up/sign-in/sign-out, stale-token recovery, device grid and detail, lock/release round-trip (including that your own lock reads as "You" and that a non-admin is offered no release on someone else's lock), and the role-gating on triggering a run.
+**UI (19)** — nav and routing, theme toggle persistence, a console-error check across every section, sign-up/sign-in/sign-out, stale-token recovery, device grid and detail, lock/release round-trip (including that your own lock reads as "You" and that a non-admin is offered no release on someone else's lock), the role-gating on triggering a run, and live WebSocket log streaming (log lines and the terminal status arriving without a reload, plus the signed-out message).
 
 ⬜ Not yet: `streaming` (unbuilt in mobile-hub), analytics assertions beyond the page rendering, and visual-regression snapshots.
 

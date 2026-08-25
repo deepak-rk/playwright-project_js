@@ -22,6 +22,7 @@ jobs:
       MONGODB_URI: mongodb://localhost:27017/mobilehub_e2e
       JWT_SECRET: ci_only_not_a_real_secret_replace_me_1234567890
       API_BASE_URL: http://localhost:3000
+      UI_BASE_URL: http://localhost:5173
     steps:
       - name: Checkout mobile-hub-e2e
         uses: actions/checkout@v4
@@ -36,12 +37,17 @@ jobs:
         with:
           node-version: lts/*
 
-      - name: Install mobile-hub backend dependencies
-        working-directory: mobile-hub/backend
+      # One install at the workspace root covers both packages.
+      - name: Install mobile-hub dependencies
+        working-directory: mobile-hub
         run: npm install
 
       - name: Start mobile-hub backend
         working-directory: mobile-hub/backend
+        run: npm run dev &
+
+      - name: Start mobile-hub frontend
+        working-directory: mobile-hub/frontend
         run: npm run dev &
 
       - name: Install mobile-hub-e2e dependencies

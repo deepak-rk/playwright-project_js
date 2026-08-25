@@ -1,6 +1,6 @@
 # mobile-hub-e2e
 
-End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) — API coverage today (auth, devices, hosts, config, builds, execution, including the live WebSocket event stream), UI coverage once mobile-hub's frontend actually typechecks and has real pages to click through.
+End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) — **41 tests**: 24 against the API (auth, devices, hosts, config, builds, execution, including the live WebSocket event stream) and 17 driving the real UI in a browser (app shell, authentication, device locking, execution).
 
 ## Prerequisites
 
@@ -10,12 +10,17 @@ This suite does **not** manage mobile-hub's lifecycle — start it yourself firs
    ```bash
    docker run -d -p 27017:27017 mongo:7
    ```
-2. mobile-hub's backend, pointed at a **dedicated test database** (never your dev/prod one — `global-setup.ts` drops it before every run):
+2. mobile-hub's backend, pointed at a **dedicated test database** (never your dev/prod one — `global-setup.ts` wipes it before every run):
    ```bash
    cd path/to/mobile-hub/backend
    MONGODB_URI=mongodb://localhost:27017/mobilehub_e2e JWT_SECRET=<32+ chars> npm run dev
    ```
-3. Confirm it's up: `curl http://localhost:3000/health`
+3. mobile-hub's frontend, for the UI project:
+   ```bash
+   cd path/to/mobile-hub/frontend
+   npm run dev     # http://localhost:5173, proxies /api to the backend
+   ```
+4. Confirm both are up: `curl http://localhost:3000/health` and `curl http://localhost:5173`
 
 ## Running the tests
 
@@ -28,27 +33,40 @@ npm test
 - `npm run test:ui` — Playwright's UI mode, for writing/debugging tests interactively.
 - `npm run report` — opens the HTML report from the last run.
 
-Override the target backend/database with env vars:
+Run one project at a time, or skip the UI entirely when you only have a backend:
 
 ```bash
-API_BASE_URL=http://localhost:3000 MONGODB_URI=mongodb://localhost:27017/mobilehub_e2e npm test
+npx playwright test --project=api      # API only
+npx playwright test --project=ui       # UI only (still depends on the api project)
+SKIP_UI=1 npm test                     # don't even wait for a frontend
+```
+
+Override the targets with env vars:
+
+```bash
+API_BASE_URL=http://localhost:3000 \
+  UI_BASE_URL=http://localhost:5173 \
+  MONGODB_URI=mongodb://localhost:27017/mobilehub_e2e \
+  npm test
 ```
 
 ## How the suite handles auth
 
 mobile-hub's only admin policy is "the first user registered in an empty database becomes admin" — there's no API to mint a second one. So:
 
-1. `global-setup.ts` waits for the backend to be healthy, **drops the test database**, then registers exactly one admin user and saves its token to `.auth/admin.json` (gitignored).
+1. `global-setup.ts` waits for the backend (and frontend) to be healthy, **clears every document in the test database** — deliberately not dropping it, which would destroy the indexes the running backend never rebuilds — then registers exactly one admin user and saves its token to `.auth/admin.json` (gitignored).
 2. Tests needing admin/operator access read that shared token via `helpers/auth.ts`'s `getAdminAuth()`.
-3. Tests needing a plain non-admin user call `registerUser()`, which mints a fresh one with a random email every time — safe to call as many times as needed.
+3. Tests needing a plain non-admin user call `registerUser()` (API) or `signUpThroughUi()` (UI), which mint a fresh one with a random email every time — safe to call as many times as needed.
 
 This is also why tests run serially (`workers: 1`, `fullyParallel: false`, see `playwright.config.ts`) — they share backend state (the admin user, and any device/host records), and parallelizing would mean chasing cross-test races instead of testing mobile-hub.
 
 ## What's covered / not yet
 
-- ✅ `auth`, `hosts`, `devices` (including the sync-while-locked and host-drops-device regression cases mobile-hub itself found and fixed), `config` (admin-only), `builds` (real fetch/checksum against a local fixture artifact server), `execution` (pass/fail/cancel/409-on-locked-device, and the live WS event stream with token auth).
-- ⬜ UI tests — blocked on mobile-hub's frontend actually typechecking (`docs/TODO.md` in that repo tracks it).
-- ⬜ `streaming`/`analytics` — not started in mobile-hub itself yet.
+**API (24)** — `auth`, `hosts`, `devices` (including the sync-while-locked and host-drops-device regression cases mobile-hub itself found and fixed), `config` (admin-only), `builds` (real fetch/checksum against a local fixture artifact server), `execution` (pass/fail/cancel/409-on-locked-device, and the live WS event stream with token auth).
+
+**UI (17)** — nav and routing, theme toggle persistence, a console-error check across every section, sign-up/sign-in/sign-out, stale-token recovery, device grid and detail, lock/release round-trip (including that your own lock reads as "You" and that a non-admin is offered no release on someone else's lock), and the role-gating on triggering a run.
+
+⬜ Not yet: `streaming` (unbuilt in mobile-hub), analytics assertions beyond the page rendering, and visual-regression snapshots.
 
 ## License
 

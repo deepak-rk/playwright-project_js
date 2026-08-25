@@ -2,7 +2,7 @@
 
 End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) using Playwright. See `README.md` for how to run it; this file is for working on the suite itself.
 
-**Status:** API coverage in place (auth, hosts, devices, config, builds, execution + its WS stream). UI coverage not started — blocked on mobile-hub's frontend actually typechecking.
+**Status:** 41 tests passing — 24 API (auth, hosts, devices, config, builds, execution + its WS stream) and 17 UI driving the real frontend in a browser.
 
 ## Repo layout
 
@@ -12,7 +12,9 @@ mobile-hub-e2e/
     api/
       helpers/          auth.ts, poll.ts, fixture-artifact-server.ts
       *.spec.ts          one file per mobile-hub backend module
-    ui/                   (future) browser-driven tests, once mobile-hub's frontend has real pages
+    ui/
+      helpers/ui.ts        seedDevice() via the API, signUpThroughUi()
+      *.spec.ts             shell, auth, devices, execution
   global-setup.ts        waits for the backend, wipes the test DB, mints the shared admin user
   playwright.config.ts
   README.md               usage docs (human-facing)
@@ -26,7 +28,9 @@ Only `CLAUDE.md` and `README.md` live at repo root. Anything else documentation-
 - **This suite does not manage mobile-hub's lifecycle.** No `webServer` auto-spawn, no cross-repo hardcoded paths. mobile-hub is a separate repo on a separate release cadence — tests target whatever `API_BASE_URL` points at, and `global-setup.ts` fails fast with a clear message if nothing's listening, rather than producing confusing connection-refused errors scattered across every test.
 - **The test database is disposable and gets wiped every run.** `global-setup.ts` refuses to run `dropDatabase()` unless `MONGODB_URI` looks like a test database (name contains "mobilehub_e2e" or "test") — a deliberate guardrail against ever pointing this at real dev/prod data by mistake. Don't remove that check to "make it more convenient."
 - **Tests run serially on purpose.** They share backend state (one admin user, device records keyed by machineId/udid). Use `uniqueDevice()` from `helpers/auth.ts` for any test creating device/host state, so tests can't collide with each other even though they share a database - but don't try to parallelize the suite without first giving every test fully isolated state, not just unique device ids.
-- **Test what mobile-hub actually promises, not implementation details.** These are black-box HTTP/WS tests against the real API contract - no reaching into mobile-hub's source, no mocking its internals.
+- **Test what mobile-hub actually promises, not implementation details.** These are black-box HTTP/WS/browser tests against the real contract - no reaching into mobile-hub's source, no mocking its internals.
+- **UI specs assert on what a user can see and do**, queried by role/label/text rather than CSS classes, so a restyle doesn't break them but a broken flow does. Their *fixtures* come from the API (`seedDevice`), not by clicking through setup screens - otherwise one broken page fails every unrelated spec.
+- **The `ui` project depends on `api`** (`dependencies: ['api']` in the config), so a backend regression fails in the cheaper, more precise suite first instead of surfacing as a confusing UI failure.
 
 ## Do this, not that
 

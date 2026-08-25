@@ -4,6 +4,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:3000';
+const UI_BASE_URL = process.env.UI_BASE_URL ?? 'http://localhost:5173';
+/** UI specs need the frontend too; set SKIP_UI=1 to run API-only against a bare backend. */
+const UI_ENABLED = process.env.SKIP_UI !== '1';
 const MONGODB_URI = process.env.MONGODB_URI ?? 'mongodb://localhost:27017/mobilehub_e2e';
 const ADMIN_STATE_PATH = path.join(__dirname, '.auth', 'admin.json');
 const HEALTH_TIMEOUT_MS = 30_000;
@@ -112,8 +115,31 @@ async function registerAdminUser(): Promise<void> {
   }
 }
 
+async function waitForFrontend(): Promise<void> {
+  const deadline = Date.now() + HEALTH_TIMEOUT_MS;
+  const ctx = await request.newContext();
+  try {
+    while (Date.now() < deadline) {
+      try {
+        const res = await ctx.get(UI_BASE_URL, { timeout: 2000 });
+        if (res.ok()) return;
+      } catch {
+        // not up yet, keep polling
+      }
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    throw new Error(
+      `The mobile-hub frontend at ${UI_BASE_URL} never responded within ${HEALTH_TIMEOUT_MS}ms. ` +
+        `Start it (npm run dev in mobile-hub/frontend), or run with SKIP_UI=1 to skip the UI project.`,
+    );
+  } finally {
+    await ctx.dispose();
+  }
+}
+
 export default async function globalSetup(): Promise<void> {
   await waitForHealth();
+  if (UI_ENABLED) await waitForFrontend();
   await resetDatabase();
   await registerAdminUser();
 }

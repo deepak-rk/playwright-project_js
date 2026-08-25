@@ -2,7 +2,7 @@
 
 End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) using Playwright. See `README.md` for how to run it; this file is for working on the suite itself.
 
-**Status:** 46 tests passing — 24 API (auth, hosts, devices, config, builds, execution + its WS stream) and 22 UI driving the real frontend in a browser.
+**Status:** 51 tests passing — 29 API (auth, hosts, devices, config, builds, execution + its WS stream) and 22 UI driving the real frontend in a browser.
 
 ## Repo layout
 
@@ -11,7 +11,7 @@ mobile-hub-e2e/
   tests/
     api/
       helpers/          auth.ts, poll.ts, fixture-artifact-server.ts
-      *.spec.ts          one file per mobile-hub backend module
+      *.spec.ts          one file per mobile-hub backend module (plus agent-auth)
     ui/
       helpers/ui.ts        seedDevice() via the API, signUpThroughUi()
       *.spec.ts             shell, auth, devices, execution, streaming, device-stream

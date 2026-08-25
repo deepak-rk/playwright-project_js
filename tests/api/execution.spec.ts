@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
 import WebSocket from 'ws';
-import { authHeaders, getAdminAuth, registerUser, uniqueDevice } from './helpers/auth';
+import { agentHeaders, authHeaders, getAdminAuth, registerUser, uniqueDevice } from './helpers/auth';
 import { pollExecutionRunUntilDone } from './helpers/poll';
 
 async function syncOneDevice(request: import('@playwright/test').APIRequestContext, machineId: string, udid: string) {
   return request.post('/api/devices/sync', {
+    headers: agentHeaders(),
     data: {
       machineId,
       devices: [

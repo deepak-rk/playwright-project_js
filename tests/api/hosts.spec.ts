@@ -1,11 +1,13 @@
 import { test, expect } from '@playwright/test';
 import { randomUUID } from 'crypto';
+import { agentHeaders } from './helpers/auth';
 
 test.describe('hosts', () => {
   test('heartbeat creates/updates a host, GET reflects it', async ({ request }) => {
     const machineId = `e2e-host-${randomUUID().slice(0, 8)}`;
 
     const heartbeat = await request.post('/api/hosts/heartbeat', {
+      headers: agentHeaders(),
       data: {
         machineId,
         hostname: 'e2e-test-host',

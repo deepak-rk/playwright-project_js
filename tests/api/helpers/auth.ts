@@ -44,3 +44,14 @@ export function uniqueDevice(): { machineId: string; udid: string } {
   const id = randomUUID().slice(0, 8);
   return { machineId: `e2e-host-${id}`, udid: `e2e-device-${id}` };
 }
+
+/**
+ * Headers a device agent must present on /api/hosts/heartbeat and
+ * /api/devices/sync. Empty when AGENT_TOKEN is unset, which is the hub's
+ * development-only open mode — so the suite works against either, while
+ * exercising the authenticated path CI and production actually use.
+ */
+export function agentHeaders(): Record<string, string> {
+  const token = process.env.AGENT_TOKEN;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}

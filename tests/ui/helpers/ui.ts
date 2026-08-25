@@ -3,6 +3,12 @@ import { randomUUID } from 'crypto';
 
 const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:3000';
 
+/** Agent-token headers; empty when the hub runs in its development open mode. */
+function agentHeaders(): Record<string, string> {
+  const token = process.env.AGENT_TOKEN;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export interface SeededDevice {
   machineId: string;
   udid: string;
@@ -23,6 +29,7 @@ export async function seedDevice(request: APIRequestContext, overrides: Partial<
   };
 
   await request.post(`${API_BASE_URL}/api/hosts/heartbeat`, {
+    headers: agentHeaders(),
     data: {
       machineId: device.machineId,
       hostname: device.machineId,
@@ -32,6 +39,7 @@ export async function seedDevice(request: APIRequestContext, overrides: Partial<
     },
   });
   await request.post(`${API_BASE_URL}/api/devices/sync`, {
+    headers: agentHeaders(),
     data: {
       machineId: device.machineId,
       devices: [

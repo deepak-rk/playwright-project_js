@@ -1,6 +1,6 @@
 # mobile-hub-e2e
 
-End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) — **46 tests**: 24 against the API (auth, devices, hosts, config, builds, execution, including the live WebSocket event stream) and 22 driving the real UI in a browser (app shell, authentication, device locking, execution, live log streaming, and the live device view).
+End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) — **51 tests**: 29 against the API (auth, devices, hosts, config, builds, execution, including the live WebSocket event stream) and 22 driving the real UI in a browser (app shell, authentication, device locking, execution, live log streaming, and the live device view).
 
 ## Prerequisites
 
@@ -15,10 +15,12 @@ This suite does **not** manage mobile-hub's lifecycle — start it yourself firs
    cd path/to/mobile-hub/backend
    MONGODB_URI=mongodb://localhost:27017/mobilehub_e2e \
      JWT_SECRET=<32+ chars> \
-     RATE_LIMIT_MAX=100000 \
+     RATE_LIMIT_MAX=100000      AGENT_TOKEN=local_e2e_agent_token_1234567890 \
      STREAM_CAPTURE_SOURCE=synthetic \
      npm run dev
    ```
+   `AGENT_TOKEN` makes the suite exercise the authenticated agent endpoints that production
+   uses — omit it and the agent-auth specs skip themselves, since there is nothing to enforce.
    `RATE_LIMIT_MAX` is raised because the suite legitimately exceeds the 200/min default in a
    single run, and `STREAM_CAPTURE_SOURCE=synthetic` makes the device-stream specs work with no
    real device attached.
@@ -70,7 +72,7 @@ This is also why tests run serially (`workers: 1`, `fullyParallel: false`, see `
 
 ## What's covered / not yet
 
-**API (24)** — `auth`, `hosts`, `devices` (including the sync-while-locked and host-drops-device regression cases mobile-hub itself found and fixed), `config` (admin-only), `builds` (real fetch/checksum against a local fixture artifact server), `execution` (pass/fail/cancel/409-on-locked-device, and the live WS event stream with token auth).
+**API (29)** — `auth`, `hosts`, `devices` (including the sync-while-locked and host-drops-device regression cases mobile-hub itself found and fixed), `config` (admin-only), `builds` (real fetch/checksum against a local fixture artifact server), `execution` (pass/fail/cancel/409-on-locked-device, and the live WS event stream with token auth), and agent authentication (the heartbeat and sync endpoints rejecting missing and wrong tokens, accepting the configured one, and reads staying public).
 
 **UI (22)** — nav and routing, theme toggle persistence, a console-error check across every section, sign-up/sign-in/sign-out, stale-token recovery, device grid and detail, lock/release round-trip (including that your own lock reads as "You" and that a non-admin is offered no release on someone else's lock), the role-gating on triggering a run, live WebSocket log streaming (log lines and the terminal status arriving without a reload, plus the signed-out message), and the live device view (frames rendering and updating, the viewer detaching on navigate-away, and two viewers sharing a single capture).
 

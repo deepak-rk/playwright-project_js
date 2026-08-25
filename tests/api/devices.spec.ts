@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { authHeaders, registerUser, uniqueDevice } from './helpers/auth';
+import { agentHeaders, authHeaders, registerUser, uniqueDevice } from './helpers/auth';
 
 async function syncOneDevice(request: import('@playwright/test').APIRequestContext, machineId: string, udid: string) {
   return request.post('/api/devices/sync', {
+    headers: agentHeaders(),
     data: {
       machineId,
       devices: [
@@ -76,7 +77,10 @@ test.describe('devices', () => {
     await syncOneDevice(request, machineId, udid);
     await request.post(`/api/devices/${udid}/lock`, { headers: authHeaders(user.token) });
 
-    const emptySync = await request.post('/api/devices/sync', { data: { machineId, devices: [] } });
+    const emptySync = await request.post('/api/devices/sync', {
+      headers: agentHeaders(),
+      data: { machineId, devices: [] },
+    });
     expect(emptySync.ok()).toBeTruthy();
 
     const get = await request.get(`/api/devices/${udid}`);

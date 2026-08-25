@@ -23,6 +23,9 @@ jobs:
       JWT_SECRET: ci_only_not_a_real_secret_replace_me_1234567890
       API_BASE_URL: http://localhost:3000
       UI_BASE_URL: http://localhost:5173
+      # Exercises the authenticated agent path that production uses, rather
+      # than the hub's development open mode.
+      AGENT_TOKEN: ci_only_agent_token_not_a_real_secret
       # The suite legitimately exceeds the 200/min default in one run.
       RATE_LIMIT_MAX: '100000'
       # No device is attached in CI, so the device-stream specs need the

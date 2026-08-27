@@ -6,10 +6,17 @@ test.describe('devices', () => {
     const device = await seedDevice(request);
     await page.goto('/devices');
 
-    const card = page.locator('a', { hasText: device.name }).first();
+    // Scoped to the actual card container (react-design-kit's stable
+    // `.rdk-card` class), not just the name <Link> — the status badge is a
+    // sibling of the link, not nested inside it, so a locator built only
+    // from the <a> never contained the status text at all. Also avoids a
+    // page-wide getByText('Idle') now ambiguously matching the filter bar's
+    // <option value="idle">Idle</option> (present-but-hidden inside a closed
+    // <select>, which Playwright's `.first()` can pick up).
+    const card = page.locator('.rdk-card', { hasText: device.name }).first();
     await expect(card).toBeVisible();
-    await expect(page.getByText(device.udid)).toBeVisible();
-    await expect(page.getByText('Idle', { exact: true }).first()).toBeVisible();
+    await expect(card.getByText(device.udid)).toBeVisible();
+    await expect(card.getByText('Idle', { exact: true })).toBeVisible();
   });
 
   test('the device detail page shows its metadata and lock state', async ({ page, request }) => {

@@ -2,7 +2,7 @@
 
 End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) using Playwright. See `README.md` for how to run it; this file is for working on the suite itself.
 
-**Status:** 51 tests passing — 29 API (auth, hosts, devices, config, builds, execution + its WS stream) and 22 UI driving the real frontend in a browser.
+**Status:** 54 tests passing — 29 API (auth, agent-auth, hosts, devices, config, builds, execution + its WS stream) and 25 UI driving the real frontend in a browser (including agent-credential management).
 
 ## Repo layout
 

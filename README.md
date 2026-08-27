@@ -1,6 +1,6 @@
 # mobile-hub-e2e
 
-End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) — **51 tests**: 29 against the API (auth, devices, hosts, config, builds, execution, including the live WebSocket event stream) and 22 driving the real UI in a browser (app shell, authentication, device locking, execution, live log streaming, and the live device view).
+End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) — **54 tests**: 29 against the API (auth, agent-auth, devices, hosts, config, builds, execution, including the live WebSocket event stream) and 25 driving the real UI in a browser (app shell, authentication, device locking, execution, live log streaming, the live device view, and agent-credential management).
 
 ## Prerequisites
 
@@ -15,15 +15,21 @@ This suite does **not** manage mobile-hub's lifecycle — start it yourself firs
    cd path/to/mobile-hub/backend
    MONGODB_URI=mongodb://localhost:27017/mobilehub_e2e \
      JWT_SECRET=<32+ chars> \
-     RATE_LIMIT_MAX=100000      AGENT_TOKEN=local_e2e_agent_token_1234567890 \
+     RATE_LIMIT_MAX=100000 \
+     AUTH_RATE_LIMIT_MAX=100000 \
+     AGENT_TOKEN=local_e2e_agent_token_1234567890 \
      STREAM_CAPTURE_SOURCE=synthetic \
      npm run dev
    ```
    `AGENT_TOKEN` makes the suite exercise the authenticated agent endpoints that production
    uses — omit it and the agent-auth specs skip themselves, since there is nothing to enforce.
    `RATE_LIMIT_MAX` is raised because the suite legitimately exceeds the 200/min default in a
-   single run, and `STREAM_CAPTURE_SOURCE=synthetic` makes the device-stream specs work with no
-   real device attached.
+   single run. `AUTH_RATE_LIMIT_MAX` (default 20/min, independent of the global limit above —
+   see mobile-hub's `backend/src/common/auth-rate-limit.ts`) also needs raising: `auth.spec.ts`
+   alone registers several users well within a minute, and at the real default it 429s partway
+   through — confirmed by actually running the suite without this override, not assumed.
+   `STREAM_CAPTURE_SOURCE=synthetic` makes the device-stream specs work with no real device
+   attached.
 
 3. mobile-hub's frontend, for the UI project:
    ```bash

@@ -28,6 +28,9 @@ jobs:
       AGENT_TOKEN: ci_only_agent_token_not_a_real_secret
       # The suite legitimately exceeds the 200/min default in one run.
       RATE_LIMIT_MAX: '100000'
+      # auth.spec.ts alone registers several users within a minute, well
+      # past the real 20/min default of this separate, tighter bucket.
+      AUTH_RATE_LIMIT_MAX: '100000'
       # No device is attached in CI, so the device-stream specs need the
       # synthetic capture source.
       STREAM_CAPTURE_SOURCE: synthetic

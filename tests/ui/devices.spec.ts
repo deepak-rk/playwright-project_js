@@ -47,6 +47,24 @@ test.describe('devices', () => {
     await expect(page.getByRole('button', { name: /Lock device/i })).toBeVisible();
   });
 
+  test('the lock holder can renew it, and a non-holder never sees the option', async ({ page, request }) => {
+    const device = await seedDevice(request);
+
+    await signUpThroughUi(page);
+    await page.goto(`/devices/${device.udid}`);
+    await page.getByRole('button', { name: /Lock device/i }).click();
+
+    const renewButton = page.getByRole('button', { name: /Renew lock/i });
+    await expect(renewButton).toBeVisible();
+    await expect(page.getByText(/expire automatically/i)).toBeVisible();
+
+    await renewButton.click();
+    await expect(page.getByText(/lock renewed/i)).toBeVisible(); // Toast
+
+    await page.getByRole('button', { name: /Release lock/i }).click();
+    await expect(renewButton).toBeHidden(); // no lock, nothing to renew
+  });
+
   test('a device locked by someone else offers no release to a non-admin', async ({ page, request }) => {
     const device = await seedDevice(request);
 
@@ -64,5 +82,6 @@ test.describe('devices', () => {
 
     await expect(page.getByText(/Locked by someone else/i)).toBeVisible();
     await expect(page.getByRole('button', { name: /Release lock|Force unlock/i })).toBeHidden();
+    await expect(page.getByRole('button', { name: /Renew lock/i })).toBeHidden(); // not this session's lock
   });
 });

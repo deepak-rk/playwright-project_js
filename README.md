@@ -1,6 +1,6 @@
 # mobile-hub-e2e
 
-End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) — **54 tests**: 29 against the API (auth, agent-auth, devices, hosts, config, builds, execution, including the live WebSocket event stream) and 25 driving the real UI in a browser (app shell, authentication, device locking, execution, live log streaming, the live device view, and agent-credential management).
+End-to-end tests for [mobile-hub](https://github.com/deepak-rk/mobile-hub) — **55 tests**: 29 against the API (auth, agent-auth, devices, hosts, config, builds, execution, including the live WebSocket event stream) and 26 driving the real UI in a browser (app shell, authentication, device locking and renewal, execution, live log streaming, the live device view, and agent-credential management).
 
 ## Prerequisites
 
@@ -80,9 +80,9 @@ This is also why tests run serially (`workers: 1`, `fullyParallel: false`, see `
 
 **API (29)** — `auth`, `hosts`, `devices` (including the sync-while-locked and host-drops-device regression cases mobile-hub itself found and fixed), `config` (admin-only), `builds` (real fetch/checksum against a local fixture artifact server), `execution` (pass/fail/cancel/409-on-locked-device, and the live WS event stream with token auth), and agent authentication (the heartbeat and sync endpoints rejecting missing and wrong tokens, accepting the configured one, and reads staying public).
 
-**UI (22)** — nav and routing, theme toggle persistence, a console-error check across every section, sign-up/sign-in/sign-out, stale-token recovery, device grid and detail, lock/release round-trip (including that your own lock reads as "You" and that a non-admin is offered no release on someone else's lock), the role-gating on triggering a run, live WebSocket log streaming (log lines and the terminal status arriving without a reload, plus the signed-out message), and the live device view (frames rendering and updating, the viewer detaching on navigate-away, and two viewers sharing a single capture).
+**UI (26)** — nav and routing, theme toggle persistence, a console-error check across every section, sign-up/sign-in/sign-out, stale-token recovery, device grid and detail, lock/release round-trip (including that your own lock reads as "You" and that a non-admin is offered no release on someone else's lock), lock renewal (holder-only, a non-holder never sees the option), the role-gating on triggering a run, live WebSocket log streaming (log lines and the terminal status arriving without a reload, plus the signed-out message), the live device view (frames rendering and updating, the viewer detaching on navigate-away, and two viewers sharing a single capture), and agent-credential management (issue/reveal-once/revoke, admin-only page and nav item).
 
-⬜ Not yet: analytics assertions beyond the page rendering, H264 streaming (unbuilt in mobile-hub), and visual-regression snapshots.
+⬜ Not yet: a `window` selector for the now-real weekly analytics aggregates (backend supports it, `AnalyticsPage.tsx` doesn't expose it), H264 playback (built, unverified — see mobile-hub's `docs/TODO.md`), and visual-regression snapshots.
 
 ## License
 

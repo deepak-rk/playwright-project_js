@@ -6,7 +6,7 @@ test.describe('app shell', () => {
 
     for (const [link, heading] of [
       ['Builds', 'Builds'],
-      ['Execution', 'Execution runs'],
+      ['Execution', 'Execution'],
       ['Analytics', 'Analytics'],
       ['Hosts', 'Hosts'],
       ['Devices', 'Devices'],
@@ -40,7 +40,7 @@ test.describe('app shell', () => {
     });
     page.on('pageerror', (e) => errors.push(`PAGEERROR ${e.message}`));
 
-    for (const route of ['/devices', '/builds', '/execution', '/analytics', '/servers']) {
+    for (const route of ['/devices', '/devices/multi-view', '/builds', '/execution', '/analytics', '/hosts']) {
       await page.goto(route, { waitUntil: 'networkidle' });
     }
     expect(errors).toEqual([]);

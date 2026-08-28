@@ -22,6 +22,11 @@ test.describe('device live view', () => {
     await signUpThroughUi(page);
     await page.goto(`/devices/${device.udid}`);
 
+    // Live view is opt-in — a capture only exists because a viewer asked for
+    // one (streaming.service.ts), and the frontend now matches that: it
+    // doesn't auto-connect on page load, a "Start live view" click does.
+    await page.getByRole('button', { name: 'Start live view' }).click();
+
     // The connection banner is non-negotiable (guidelines §10).
     await expect(page.getByText('Live', { exact: true })).toBeVisible({ timeout: 20000 });
 
@@ -65,11 +70,13 @@ test.describe('device live view', () => {
     const device = await seedDevice(request);
     await signUpThroughUi(page);
     await page.goto(`/devices/${device.udid}`);
+    await page.getByRole('button', { name: 'Start live view' }).click();
     await expect(page.getByText('Live', { exact: true })).toBeVisible({ timeout: 20000 });
 
     // A second tab in the same context reuses the session token.
     const second = await context.newPage();
     await second.goto(`/devices/${device.udid}`);
+    await second.getByRole('button', { name: 'Start live view' }).click();
     await expect(second.getByText('Live', { exact: true })).toBeVisible({ timeout: 20000 });
 
     await expect
